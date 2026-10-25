@@ -63,5 +63,38 @@ def ask(q, history):
         text += delta
         yield text
 
+css = """
+.gradio-container {
+    max-width: 800px !important;
+    margin: auto !important;
+}
+.send-btn {
+    background: #2563eb !important;
+    color: white !important;
+}
+"""
 
-gr.ChatInterface(fn=ask, title="手册 RAG 问答机器人").launch()
+with gr.Blocks(css=css) as demo:
+    gr.Markdown("# 手册 RAG 问答机器人\n只根据蒸馏手册回答，回答末尾标出引用出处。")
+    chatbot = gr.Chatbot()
+    msg = gr.Textbox(placeholder="输入问题……")
+    with gr.Row():
+        send = gr.Button("发送", elem_classes="send-btn")
+
+        clear = gr.ClearButton([msg, chatbot])
+    gr.Examples(
+        examples=["RAG 是什么？", "LoRA 和全参数微调有什么区别？", "RAG 有哪些优化方法？"],
+        inputs=msg,
+    )
+
+    def respond(message, history):
+        history = history + [{"role": "user", "content": message}]
+        for chunk in ask(message, history):
+            yield history + [{"role": "assistant", "content": chunk}], ""
+
+    msg.submit(respond, [msg, chatbot], [chatbot, msg])
+    send.click(respond, [msg, chatbot], [chatbot, msg])
+
+demo.launch()
+
+

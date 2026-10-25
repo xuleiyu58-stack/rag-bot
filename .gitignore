@@ -4,3 +4,4 @@ __pycache__/
 大模型面试蒸馏手册.md
 chunks.jsonl
 
+emb.npy
